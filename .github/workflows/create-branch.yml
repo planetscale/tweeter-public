@@ -1,0 +1,116 @@
+name: Run database migrations
+on: 
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  PLANETSCALE_SERVICE_TOKEN_ID: ${{ secrets.PLANETSCALE_SERVICE_TOKEN_ID }}
+  PLANETSCALE_SERVICE_TOKEN: ${{ secrets.PLANETSCALE_SERVICE_TOKEN }}
+  PLANETSCALE_ORG: bmorrison-ps
+
+jobs:
+  planetscale:
+    permissions: 
+      pull-requests: write
+      contents: read
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Create a branch
+        uses: planetscale/create-branch-action@allow-duplicates
+        id: create_branch
+        with:
+          org_name: ${{ env.PLANETSCALE_ORG }}
+          database_name: tweeter
+          branch_name: ${{ github.head_ref }}
+          from: main
+          check_exists: true
+          wait: true
+      - name: Create branch password
+        uses: planetscale/create-branch-password-action@v3
+        id: create_password
+        with:
+          org_name: ${{ env.PLANETSCALE_ORG }}
+          database_name: tweeter
+          branch_name: ${{ github.head_ref }}
+          name: ghapass
+      - uses: actions/checkout@v3
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.2.1
+      - name: Cache Ruby gems
+        uses: actions/cache@v3
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+      - name: Install dependencies
+        run: |
+          bundle config --local path vendor/bundle
+          bundle config --local deployment true
+          bundle install
+      - name: Set migration config
+        run: |
+          echo "org: ${{ env.PLANETSCALE_ORG }}" > .pscale.yml
+          echo "database: tweeter" >> .pscale.yml
+          echo "branch: ${{ github.head_ref }}" >> .pscale.yml
+      - name: Install the latest pscale CLI from GitHub releases
+        uses: jaxxstorm/action-install-gh-release@v1.9.0
+        with:
+          repo: planetscale/cli
+      - name: Run migrations
+        run: |
+          bundle exec rails psdb:migrate > migration-output.txt
+        env:
+          DB_NAME: tweeter
+          DB_USER: ${{ steps.create_password.outputs.username }}
+          DB_PASSWORD: ${{ steps.create_password.outputs.password }}
+          DB_HOST: aws.connect.psdb.cloud
+      - name: Open DR if migrations
+        run: |
+          if grep -q "migrated" migration-output.txt; then
+            echo "DB_MIGRATED=true" >> $GITHUB_ENV
+            if pscale deploy-request create tweeter ${{ github.head_ref }} --org ${{ env.PLANETSCALE_ORG }}; then
+              cat migration-output.txt
+              echo "DR_OPENED=true" >> $GITHUB_ENV
+              echo "Deploy request successfully opened"
+            else
+              echo "Error: Deployment request failed"
+              exit 0
+            fi
+          else
+            echo "Did not open a DR since nothing found in migration-output.txt"
+            cat migration-output.txt
+            exit 0
+          fi
+      - name: Get Deploy Requests
+        if: ${{ env.DR_OPENED }}
+        run: |
+          pscale deploy-request list tweeter --org ${{ env.PLANETSCALE_ORG }} -f json > dr_output.txt
+          deploy_request_number=$(jq --arg branch ${{ github.head_ref }} '.[] | select(.state == "open" and .branch == $branch) | .number' dr_output.txt)
+          echo "DEPLOY_REQUEST_NUMBER=$deploy_request_number" >> $GITHUB_ENV
+      - name: 'Setup jq'
+        uses: dcarbone/install-jq-action@v1.0.1
+        with:
+          version: "1.6"
+        if: ${{ env.DR_OPENED }}
+      - name: Comment PR - db migrated
+        if: ${{ env.DR_OPENED }}
+        run: |
+          sleep 2
+          echo "Deploy request opened: https://app.planetscale.com/${{ env.PLANETSCALE_ORG }}/tweeter/deploy-requests/${{ env.DEPLOY_REQUEST_NUMBER }}" >> migration-message.txt
+          echo "" >> migration-message.txt
+          echo "\`\`\`diff" >> migration-message.txt
+          pscale deploy-request diff tweeter ${{ env.DEPLOY_REQUEST_NUMBER }} --org ${{ env.PLANETSCALE_ORG }} -f json | jq -r '.[].raw' >> migration-message.txt
+          echo "\`\`\`" >> migration-message.txt
+      - name: Comment PR - db migrated
+        uses: thollander/actions-comment-pull-request@v2
+        if: ${{ env.DR_OPENED }}
+        with:
+          filePath: migration-message.txt
+

@@ -1,0 +1,24 @@
+<div class="d-flex justify-content-between mb-4">
+  <div class="d-flex gap-3 align-items-center">
+    <%= link_to gravatar_for(@user, size: 100), @user %>
+    <div>
+      <%= link_to @user.name, @user, class: "d-block fw-semibold fs-4 lh-sm text-dark" %>
+      <div class="text-muted">@<%= @user.slug %></div>
+
+      <small class="d-flex gap-3 mt-2">
+        <div><%= link_to @user.following.count, following_user_path(@user), class: "text-dark fw-semibold" %> <span class="text-muted">Following</span></div>
+        <div><%= link_to @user.followers.count, followers_user_path(@user), class: "text-dark fw-semibold" %> <span class="text-muted">Followers</span></div>
+      </small>
+    </div>
+  </div>
+
+  <% if logged_in? && current_user?(@user) %> 
+    <div class="mt-3" id="follow_form">
+      <% if current_user.following?(@user) %>
+        <%= render 'shared/unfollow', user: @user %>
+      <% else %>
+        <%= render 'shared/follow', user: @user %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

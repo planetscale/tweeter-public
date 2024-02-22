@@ -1,0 +1,114 @@
+diff --git a/app/controllers/tweets_controller.rb b/app/controllers/tweets_controller.rb
+index ddae83a..d1c1301 100644
+--- a/app/controllers/tweets_controller.rb
++++ b/app/controllers/tweets_controller.rb
+@@ -1,7 +1,7 @@
+ # frozen_string_literal: true
+ 
+ class TweetsController < ApplicationController
+-  before_action :logged_in_user, only: [:create, :destroy, :like_tweet]
++  before_action :logged_in_user, only: [:create, :destroy]
+   before_action :correct_user, only: [:destroy]
+ 
+   def index
+@@ -21,13 +21,6 @@ class TweetsController < ApplicationController
+     end
+   end
+ 
+-  def like_tweet
+-    tweet = Tweet.find(params[:id])
+-    tweet.increment!(:likes)
+-
+-    redirect_back(fallback_location: root_path)
+-  end
+-
+   def destroy
+     @tweet.destroy
+     redirect_to root_url
+diff --git a/app/views/tweets/_tweet.html.erb b/app/views/tweets/_tweet.html.erb
+index e91c75a..17d64d7 100644
+--- a/app/views/tweets/_tweet.html.erb
++++ b/app/views/tweets/_tweet.html.erb
+@@ -16,11 +16,6 @@
+       <time>
+         <%= time_ago_in_words(tweet.created_at) %> ago.
+       </time>
+-      <div class="ml-2">
+-        <%= link_to like_tweet_path(tweet), method: :post do %>
+-          Likes <%= tweet.likes %>
+-        <% end %>
+-      </div>
+       <% if current_user?(tweet.user) %>
+         <div class="tweet-actions">
+           <%= link_to "delete", tweet, method: :delete, data: { confirm: "Delete Tweet?" } %>
+diff --git a/config/routes.rb.orig b/config/routes.rb.orig
+deleted file mode 100644
+index 3e28017..0000000
+--- a/config/routes.rb.orig
++++ /dev/null
+@@ -1,24 +0,0 @@
+-# frozen_string_literal: true
+-
+-Rails.application.routes.draw do
+-  root "welcome#index"
+-
+-  get    "home",   to: "home#index"
+-  get    "login",  to: "sessions#new"
+-  post   "login",  to: "sessions#create"
+-  delete "logout", to: "sessions#destroy"
+-  get    "signup", to: "users#new"
+-  resources :users, only: [:index, :show, :edit, :create, :update, :destroy] do
+-    member do
+-      get :following
+-      get :followers
+-    end
+-  end
+-  resources :tweets,       only: [:index, :create, :destroy]
+-   
+-  resource  :relationship, only: [:create, :destroy]
+-  resolve("Relationship") { :relationship }
+-
+-  get "help",  to: "static_pages#help"
+-  get "about", to: "static_pages#about"
+-end
+diff --git a/config/routes.rb.rej b/config/routes.rb.rej
+deleted file mode 100644
+index d726066..0000000
+--- a/config/routes.rb.rej
++++ /dev/null
+@@ -1,12 +0,0 @@
+-@@ -14,7 +14,10 @@
+-       get :followers
+-     end
+-   end
+--  resources :tweets,       only: [:index, :create, :destroy]
+-+  resources :tweets,       only: [:index, :create, :destroy] do
+-+    post :like_tweet, on: :member, as: :like
+-+  end
+-+   
+-   resource  :relationship, only: [:create, :destroy]
+-   resolve("Relationship") { :relationship }
+- 
+diff --git a/db/migrate/20230607215754_add_likes_to_tweets.rb b/db/migrate/20230607215754_add_likes_to_tweets.rb
+deleted file mode 100644
+index 8ee62ee..0000000
+--- a/db/migrate/20230607215754_add_likes_to_tweets.rb
++++ /dev/null
+@@ -1,5 +0,0 @@
+-class AddLikesToTweets < ActiveRecord::Migration[6.1]
+-  def change
+-    add_column :tweets, :likes, :integer, default: 0
+-  end
+-end
+diff --git a/db/schema.rb b/db/schema.rb
+index 47a98c6..ed31f79 100644
+--- a/db/schema.rb
++++ b/db/schema.rb
+@@ -51,7 +51,6 @@ ActiveRecord::Schema[7.0].define(version: 2023_06_15_120038) do
+     t.integer "user_id", null: false
+     t.datetime "created_at", null: false
+     t.datetime "updated_at", null: false
+-    t.integer "likes", default: 0
+     t.index ["user_id", "created_at"], name: "index_tweets_on_user_id_and_created_at"
+     t.index ["user_id"], name: "index_tweets_on_user_id"
+   end

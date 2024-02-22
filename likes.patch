@@ -1,0 +1,82 @@
+diff --git a/app/controllers/tweets_controller.rb b/app/controllers/tweets_controller.rb
+index d1c1301d..ddae83aa 100644
+--- a/app/controllers/tweets_controller.rb
++++ b/app/controllers/tweets_controller.rb
+@@ -1,7 +1,7 @@
+ # frozen_string_literal: true
+ 
+ class TweetsController < ApplicationController
+-  before_action :logged_in_user, only: [:create, :destroy]
++  before_action :logged_in_user, only: [:create, :destroy, :like_tweet]
+   before_action :correct_user, only: [:destroy]
+ 
+   def index
+@@ -21,6 +21,13 @@ class TweetsController < ApplicationController
+     end
+   end
+ 
++  def like_tweet
++    tweet = Tweet.find(params[:id])
++    tweet.increment!(:likes)
++
++    redirect_back(fallback_location: root_path)
++  end
++
+   def destroy
+     @tweet.destroy
+     redirect_to root_url
+diff --git a/app/views/tweets/_tweet.html.erb b/app/views/tweets/_tweet.html.erb
+index e2d8333f..de0aa38d 100644
+--- a/app/views/tweets/_tweet.html.erb
++++ b/app/views/tweets/_tweet.html.erb
+@@ -1,4 +1,4 @@
+-<li class="d-flex justify-content-between gap-3 border-top border-light-subtle mb-3 pt-4">
++<li class="d-flex justify-content-between gap-3 border-top border-light-subtle mb-2 pt-4">
+   <div class="d-flex justify-content-between gap-3">
+     <%= link_to gravatar_for(tweet.user, size: 40), tweet.user %>
+     <div class="d-flex flex-column gap-1">
+@@ -20,6 +20,16 @@
+           </div>
+         <% end %>
+       </div>
++      <div class="mt-2">
++        <%= link_to like_tweet_path(tweet), method: :post, class: 'd-flex gap-2 align-items-center text-muted' do %>
++          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-heart" viewBox="0 0 16 16">
++            <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01L8 2.748zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143c.06.055.119.112.176.171a3.12 3.12 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15z"/>
++          </svg>
++          <span class="fw-medium">
++          <%= tweet.likes %>
++          </span>
++        <% end %>
++      </div>
+     </div>
+   </div>
+   <div>
+diff --git a/config/routes.rb b/config/routes.rb
+index 3e280175..a8639066 100644
+--- a/config/routes.rb
++++ b/config/routes.rb
+@@ -14,7 +14,10 @@ Rails.application.routes.draw do
+       get :followers
+     end
+   end
+-  resources :tweets,       only: [:index, :create, :destroy]
++
++  resources :tweets, only: [:index, :create, :destroy] do
++    post :like_tweet, on: :member, as: :like
++  end
+    
+   resource  :relationship, only: [:create, :destroy]
+   resolve("Relationship") { :relationship }
+diff --git a/db/schema.rb b/db/schema.rb
+index ed31f790..47a98c6a 100644
+--- a/db/schema.rb
++++ b/db/schema.rb
+@@ -51,6 +51,7 @@ ActiveRecord::Schema[7.0].define(version: 2023_06_15_120038) do
+     t.integer "user_id", null: false
+     t.datetime "created_at", null: false
+     t.datetime "updated_at", null: false
++    t.integer "likes", default: 0
+     t.index ["user_id", "created_at"], name: "index_tweets_on_user_id_and_created_at"
+     t.index ["user_id"], name: "index_tweets_on_user_id"
+   end

@@ -1,0 +1,17 @@
+<% provide(:title, 'Home') %>
+
+<div>
+  <% if logged_in? %>
+    <section>
+      <%= render 'shared/user_info' %>
+    </section>
+  <% end %>
+  <% if @tweets.any? %>
+      <ol class="d-flex flex-column my-4 gap-3">
+        <%= render @tweets %>
+        <div class="my-4">
+          <%= will_paginate @tweets, renderer: WillPaginate::ActionView::BootstrapLinkRenderer %>
+        </div>
+      </ol>
+  <% end %>
+</div>

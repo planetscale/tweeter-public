@@ -1,0 +1,112 @@
+Markdown:
+  WarnInvalid: true
+  Autodetect: true
+
+Layout/CommentIndentation:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Layout/LeadingCommentSpace:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Layout/TrailingBlankLines:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Layout/TrailingEmptyLines:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Layout/EmptyLineBetweenDefs:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Lint/DuplicateRequire:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Lint/DuplicateMethods:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Lint/RedundantCopDisableDirective:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Lint/RedundantCopEnableDirective:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Lint/RedundantRequireStatement:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Lint/UnusedMethodArgument:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Lint/UnusedBlockArgument:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Lint/UselessAssignment:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Lint/UselessMethodDefinition:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Lint/UselessAccessModifier:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Lint/Void:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Naming/FileName:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Style/AsciiComments:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Style/Documentation:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Style/CommentAnnotation:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Style/FrozenStringLiteralComment:
+  Exclude:
+    - '**/*.md'
+    - '**/*.markdown'
+
+Layout/LineLength:
+  IgnoredPatterns:
+    - !ruby/regexp /^\#/

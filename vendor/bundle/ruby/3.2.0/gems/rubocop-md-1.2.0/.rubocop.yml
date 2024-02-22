@@ -1,0 +1,63 @@
+AllCops:
+  NewCops: enable
+  Include:
+    - 'lib/**/*.rb'
+    - 'lib/**/*.rake'
+    - 'test/**/*.rb'
+  Exclude:
+    - 'bin/**/*'
+    - 'vendor/**/*'
+    - 'tmp/**/*'
+    - 'Rakefile'
+    - 'Gemfile'
+    - '*.gemspec'
+  DisplayCopNames: true
+  StyleGuideCopsOnly: false
+  TargetRubyVersion: 2.5
+  SuggestExtensions: false
+
+Style/Documentation:
+  Exclude:
+    - 'test/**/*.rb'
+
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/RegexpLiteral:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Exclude:
+    - 'test/**/*.rb'
+
+Style/HashEachMethods:
+  Enabled: true
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true
+
+Layout/EmptyLinesAroundArguments:
+  Enabled: false
+
+Layout/SpaceInsideStringInterpolation:
+  EnforcedStyle: no_space
+
+Naming/FileName:
+  Exclude:
+    - 'lib/rubocop-md.rb'
+
+Layout/LineLength:
+  Max: 100
+  Exclude:
+    - 'test/**/*.rb'
+
+Metrics/MethodLength:
+  Exclude:
+    - 'test/**/*.rb'
+
+Metrics/ClassLength:
+  Exclude:
+    - 'test/**/*.rb'
